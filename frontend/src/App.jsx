@@ -6,7 +6,9 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-const API_BASE_URL = 'http://localhost:8080/api/resume';
+const API_BASE_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api/resume` 
+  : 'http://localhost:8080/api/resume';
 
 function App() {
   const [file, setFile] = useState(null);
