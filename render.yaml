@@ -10,16 +10,16 @@ services:
       - key: FRONTEND_URL
         fromService:
           name: resume-parser-frontend
-          type: static
+          type: web
           property: url
 
   # 2. React Frontend Static Site
-  - type: static
+  - type: web
     name: resume-parser-frontend
-    env: static
+    runtime: static
     rootDir: frontend
     buildCommand: npm run build
-    publishDir: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
