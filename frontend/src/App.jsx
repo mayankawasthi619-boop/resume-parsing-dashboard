@@ -6,9 +6,13 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL 
-  ? `${import.meta.env.VITE_API_URL}/api/resume` 
-  : 'http://localhost:8080/api/resume';
+const getApiUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return 'http://localhost:8080/api/resume';
+  const base = envUrl.startsWith('http') ? envUrl : `https://${envUrl}`;
+  return `${base}/api/resume`;
+};
+const API_BASE_URL = getApiUrl();
 
 function App() {
   const [file, setFile] = useState(null);

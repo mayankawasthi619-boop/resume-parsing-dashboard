@@ -12,7 +12,11 @@ public class HomeController {
 
     @GetMapping("/")
     public String index() {
+        String url = frontendUrl.trim();
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "https://" + url;
+        }
         // Automatically redirect to the React frontend dashboard URL
-        return "redirect:" + frontendUrl;
+        return "redirect:" + url;
     }
 }
