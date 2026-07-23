@@ -1,9 +1,11 @@
 services:
-  # 1. Spring Boot Backend Web Service (Deployed via Docker)
+  # 1. Spring Boot Backend Web Service (Free Tier via Docker)
   - type: web
     name: resume-parser-backend
-    env: docker
+    runtime: docker
+    plan: free
     rootDir: backend
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: FRONTEND_URL
         fromService:
@@ -11,13 +13,18 @@ services:
           type: web
           property: host
 
-  # 2. React Frontend Static Site
+  # 2. React Frontend Static Site (Free Tier)
   - type: web
     name: resume-parser-frontend
     runtime: static
+    plan: free
     rootDir: frontend
-    buildCommand: npm run build
+    buildCommand: npm install && npm run build
     staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         fromService:
