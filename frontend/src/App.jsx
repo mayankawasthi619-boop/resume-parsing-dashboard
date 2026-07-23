@@ -23,6 +23,7 @@ function App() {
   const [tab, setTab] = useState('resume'); // 'resume' | 'json'
   const [historyList, setHistoryList] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [serviceStatus, setServiceStatus] = useState('checking'); // 'checking' | 'online' | 'offline'
   
   const fileInputRef = useRef(null);
   const toastTimeoutRef = useRef(null);
@@ -37,13 +38,20 @@ function App() {
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/history`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(`${API_BASE_URL}/history`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (response.ok) {
         const data = await response.json();
         setHistoryList(data);
+        setServiceStatus('online');
+      } else {
+        setServiceStatus('offline');
       }
     } catch (err) {
       console.error('Failed to fetch history:', err);
+      setServiceStatus('offline');
     }
   };
 
@@ -122,11 +130,17 @@ function App() {
     const formData = new FormData();
     formData.append('file', file);
 
+    // 90-second timeout to handle Render free-tier cold starts
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+
     try {
       const response = await fetch(`${API_BASE_URL}/parse`, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -135,13 +149,20 @@ function App() {
 
       const data = await response.json();
       setParsedData(data);
+      setServiceStatus('online');
       setTab('resume');
       showToast('Resume parsed successfully!');
       
       // Refresh the history list
       fetchHistory();
     } catch (err) {
-      setError(err.message || 'Server connection error. Please check if the backend is running.');
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        setError('Request timed out. The backend may be waking up from sleep — please try again in 30 seconds.');
+      } else {
+        setError(err.message || 'Server connection error. Please check if the backend is running.');
+      }
+      setServiceStatus('offline');
       console.error('Parsing error:', err);
     } finally {
       setParsing(false);
@@ -202,9 +223,9 @@ function App() {
             <p>Intelligence-Driven CV Analytics</p>
           </div>
         </div>
-        <div className="status-badge">
+        <div className={`status-badge ${serviceStatus === 'offline' ? 'status-offline' : serviceStatus === 'checking' ? 'status-checking' : ''}`}>
           <div className="status-dot"></div>
-          <span>Service Connected</span>
+          <span>{serviceStatus === 'online' ? 'Service Connected' : serviceStatus === 'offline' ? 'Service Offline' : 'Connecting...'}</span>
         </div>
       </header>
 
