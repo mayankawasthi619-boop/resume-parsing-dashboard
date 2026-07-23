@@ -13,11 +13,10 @@ services:
           type: web
           property: host
 
-  # 2. React Frontend Static Site (Free Tier)
+  # 2. React Frontend Static Site (Always Free - no plan field needed)
   - type: web
     name: resume-parser-frontend
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
